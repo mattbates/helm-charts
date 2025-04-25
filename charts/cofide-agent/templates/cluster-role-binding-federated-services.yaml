@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ printf "%s-federated-services" .Release.Name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cofide-agent.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: registry-manager-role
+  apiGroup: rbac.authorization.k8s.io
