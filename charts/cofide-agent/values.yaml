@@ -1,0 +1,96 @@
+# Default values for cofide-agent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  registry: 010438484483.dkr.ecr.eu-west-1.amazonaws.com
+  repository: cofide/cofide-agent
+  pullPolicy: Always
+  tag: ""
+
+agent:
+  env:
+    AGENT_ID: ""
+    AGENT_PROFILE: kubernetes
+    AGENT_TOKEN: ""
+    CLUSTER_ID: ""
+    COFIDE_CONNECT_TRUST_DOMAIN: ""
+    COFIDE_CONNECT_URL: ""
+    ENDPOINT_ID: ""
+    FEDERATION_ENDPOINT_ENABLED: true
+    MANAGEMENT_ZONE: false
+    OIDC_ENDPOINT_ENABLED: true
+    TRUST_DOMAIN: ""
+    TRUST_ZONE: ""
+
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+#This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ 
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  requests:
+    cpu: 300m
+    memory: 128Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+volumes:
+ - name: spiffe-workload-api
+   csi:
+     driver: "csi.spiffe.io"
+     readOnly: true
+
+volumeMounts:
+ - name: spiffe-workload-api
+   mountPath: "/spiffe-workload-api"
+   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

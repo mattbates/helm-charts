@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cofide-agent
+data:
+{{- range $key, $value := .Values.agent.env }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}
+
