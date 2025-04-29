@@ -1,0 +1,39 @@
+name: publish-helm-chart
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/connect-ecr-gh-actions-access
+          role-session-name: connect-ecr-gh-actions-access
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Install Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: 'latest'
+      - name: Authenticate Helm to ECR
+        run: |
+          aws ecr get-login-password --region eu-west-1 | helm registry login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+      - name: Package Helm chart
+        run: |
+          helm package charts/cofide-agent --destination packaged
+      - name: Push Helm chart to ECR
+        run: |
+          CHART_FILE=$(ls packaged/*.tgz)
+          helm push "$CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
+
