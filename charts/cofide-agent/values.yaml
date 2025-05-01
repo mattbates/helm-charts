@@ -21,11 +21,9 @@ agent:
     COFIDE_CONNECT_TRUST_DOMAIN: ""
     COFIDE_CONNECT_URL: ""
     ENDPOINT_ID: ""
-    FEDERATION_ENDPOINT_ENABLED: true
     MANAGEMENT_ZONE: false
     OIDC_ENDPOINT_ENABLED: true
     TRUST_DOMAIN: ""
-    TRUST_ZONE: ""
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
