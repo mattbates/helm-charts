@@ -18,3 +18,10 @@ rules:
   - apiGroups: ["gateway.networking.k8s.io"]
     resources: ["*"]
     verbs: ["*"]
+  - apiGroups:
+    - registry.cofide.io
+    resources:
+    - federatedservices
+    - federatedservices/finalizers
+    - federatedservices/status
+    verbs: ["*"]
