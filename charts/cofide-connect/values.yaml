@@ -1,0 +1,89 @@
+# Default values for cofide-connect.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  registry: 010438484483.dkr.ecr.eu-west-1.amazonaws.com
+  repository: cofide/connect-api
+  pullPolicy: Always
+  tag: ""
+
+connect:
+  trustDomain: ""
+  urlBase: ""
+  allowedOrigins: []
+  env:
+    VALKEY_ADDRESS: "valkey.connect.svc.cluster.local:6379"
+    INSECURE_SERVER_ADDRESS: ":51106"
+    SPIFFE_ENDPOINT_SOCKET: "unix:///spiffe-workload-api/spire-agent.sock"
+    AWS_REGION: ""
+    IAM_ROLE_ARN: ""
+    S3_TRUST_BUNDLE_STORE_BUCKET: ""
+    OIDC_PROVIDER_AUDIENCE: ""
+    ENVIRONMENT_TYPE: "DEVELOPMENT"
+    CONNECT_TRUST_BUNDLE_STORE_URL: ""
+    TELEMETRY_ENABLED: false
+    OTEL_EXPORTER_OTLP_ENDPOINT: ""
+    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+    OTEL_METRIC_EXPORT_INTERVAL: 60000
+    OTEL_SERVICE_NAME: connect
+
+envoy:
+  image: "envoyproxy/envoy:v1.33-latest"
+  auth:
+    issuer: ""
+    tlsSecretName: ""
+  securityContext: {}
+  resources: {}
+
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Annotations to add to the Connect Service (LoadBalancer)
+serviceAnnotations: {}
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

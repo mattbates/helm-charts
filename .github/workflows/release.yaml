@@ -32,8 +32,11 @@ jobs:
       - name: Package Helm chart
         run: |
           helm package charts/cofide-agent --destination packaged
+          helm package charts/cofide-connect --destination packaged
       - name: Push Helm chart to ECR
         run: |
-          CHART_FILE=$(ls packaged/*.tgz)
-          helm push "$CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
+          AGENT_CHART_FILE=$(ls packaged/cofide-agent*.tgz)
+          CONNECT_CHART_FILE=$(ls packaged/cofide-connect*.tgz)
+          helm push "$AGENT_CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
+          helm push "$CONNECT_CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
 
