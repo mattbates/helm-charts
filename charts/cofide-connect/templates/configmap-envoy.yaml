@@ -151,7 +151,7 @@ data:
                                 - https://connect.{{ .Values.connect.urlBase }}
                               remote_jwks:
                                 http_uri:
-                                  uri: https://{{ .Values.envoy.auth.issuer }}/.well-known/jwks.json
+                                  uri: {{ .Values.envoy.auth.issuer }}/.well-known/jwks.json
                                   cluster: jwks_cluster
                                   timeout: 30s
                               claim_to_headers:
@@ -320,13 +320,13 @@ data:
                   - endpoint:
                       address:
                         socket_address:
-                          address: {{ .Values.envoy.auth.issuer }}
+                          address: {{ (urlParse .Values.envoy.auth.issuer).host }}
                           port_value: 443
           transport_socket:
             name: envoy.transport_sockets.tls
             typed_config:
               '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-              sni: {{ .Values.envoy.auth.issuer }}
+              sni: {{ (urlParse .Values.envoy.auth.issuer).host }}
               common_tls_context:
                 tls_params:
                   tls_minimum_protocol_version: TLSv1_3

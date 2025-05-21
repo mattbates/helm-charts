@@ -8,7 +8,6 @@ metadata:
   {{- end }}
   labels:
     {{- include "cofide-connect.labels" . | nindent 4 }}
-  app.kubernetes.io/name: {{ .Release.Name }}
 spec:
   type: LoadBalancer
   ports:
@@ -17,4 +16,4 @@ spec:
       port: 8443
       targetPort: 8443
   selector:
-    app.kubernetes.io/name: {{ .Release.Name }}
+    {{- include "cofide-connect.selectorLabels" . | nindent 4 }}
