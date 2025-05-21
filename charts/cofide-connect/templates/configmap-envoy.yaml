@@ -1,0 +1,339 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: connect-api-envoy-config
+  namespace: connect
+data:
+  envoy.yaml: |
+    node:
+      id: connect-api-envoy-proxy
+      cluster: cluster
+      metadata:
+        spiffe_id: spiffe://{{ .Values.connect.trustDomain }}/ns/{{ .Release.Namespace }}/sa/{{ include "cofide-connect.serviceAccountName" . }}
+    static_resources:
+      listeners:
+        - name: listener_0
+          address:
+            socket_address:
+              address: 0.0.0.0
+              port_value: 8443
+          listener_filters:
+            - name: envoy.filters.listener.tls_inspector
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.listener.tls_inspector.v3.TlsInspector
+          filter_chains:
+            - name: connect_xds_api
+              filter_chain_match:
+                application_protocols:
+                  - h2
+                server_names:
+                  - xds.{{ .Values.connect.urlBase }}
+              transport_socket:
+                name: envoy.transport_sockets.tls
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                  require_client_certificate: true
+                  common_tls_context:
+                    alpn_protocols:
+                      - h2
+                    tls_certificate_sds_secret_configs:
+                      - name: spiffe://{{ .Values.connect.trustDomain }}/ns/{{ .Release.Namespace }}/sa/{{ include "cofide-connect.serviceAccountName" . }}
+                        sds_config:
+                          resource_api_version: V3
+                          api_config_source:
+                            api_type: GRPC
+                            grpc_services:
+                              - envoy_grpc:
+                                  cluster_name: spire_agent
+                    combined_validation_context:
+                      default_validation_context:
+                        match_typed_subject_alt_names:
+                          - san_type: URI
+                            matcher:
+                              safe_regex:
+                                regex: spiffe://[^/]*/ns/cofide/sa/cofide-agent
+                      validation_context_sds_secret_config:
+                        name: ALL
+                        sds_config:
+                          resource_api_version: V3
+                          api_config_source:
+                            transport_api_version: V3
+                            api_type: GRPC
+                            grpc_services:
+                              - envoy_grpc:
+                                  cluster_name: spire_agent
+              filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    stream_idle_timeout: 3600s
+                    stat_prefix: grpc_json
+                    codec_type: AUTO
+                    route_config:
+                      name: local_route
+                      virtual_hosts:
+                        - name: grpc_services
+                          domains:
+                            - '*'
+                          routes:
+                            - match:
+                                prefix: /
+                              route:
+                                cluster: xds_service
+                    http_filters:
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+            - name: connect_api
+              filter_chain_match:
+                application_protocols:
+                  - h2
+                server_names:
+                  - connect.{{ .Values.connect.urlBase }}
+              transport_socket:
+                name: envoy.transport_sockets.tls
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                  common_tls_context:
+                    alpn_protocols:
+                      - h2
+                    tls_certificates:
+                      - certificate_chain:
+                          filename: /etc/envoy/tls/tls.crt
+                        private_key:
+                          filename: /etc/envoy/tls/tls.key
+              filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    stat_prefix: grpc_json
+                    codec_type: AUTO
+                    forward_client_cert_details: ALWAYS_FORWARD_ONLY
+                    route_config:
+                      name: local_route
+                      virtual_hosts:
+                        - name: grpc_services
+                          domains:
+                            - '*'
+                          typed_per_filter_config:
+                            envoy.filters.http.cors:
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.cors.v3.CorsPolicy
+                              {{- with .Values.connect.allowedOrigins }}
+                              allow_origin_string_match:
+                              {{- range . }}
+                                - exact: {{ . }}
+                              {{- end }}
+                              {{- end }}
+                              allow_methods: POST,GET
+                              allow_headers: Authorization, Content-Type, Connect-Protocol-Version, Connect-Timeout-Ms, X-User-Agent
+                              allow_credentials: true
+                              max_age: "7200"
+                          routes:
+                            - match:
+                                prefix: /proto.connect
+                              route:
+                                cluster: connect_service
+                            - match:
+                                prefix: /grpc.health.v1.Health
+                              route:
+                                cluster: connect_service
+                    http_filters:
+                      - name: envoy.filters.http.cors
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+                      - name: envoy.filters.http.jwt_authn
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+                          providers:
+                            ory-oauth:
+                              issuer: {{ .Values.envoy.auth.issuer }}
+                              audiences:
+                                - https://connect.{{ .Values.connect.urlBase }}
+                              remote_jwks:
+                                http_uri:
+                                  uri: {{ .Values.envoy.auth.issuer }}/.well-known/jwks.json
+                                  cluster: jwks_cluster
+                                  timeout: 30s
+                              claim_to_headers:
+                                - header_name: x-jwt-claim-sub
+                                  claim_name: sub
+                          rules:
+                            - match:
+                                prefix: /proto.connect.trust_zone_service.v1alpha1.TrustZoneService/RegisterAgent
+                              # No _user_ authentication is required as this is the agent registering
+                              requires: {}
+                            - match:
+                                prefix: /proto.connect
+                              requires:
+                                provider_name: ory-oauth
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                    access_log:
+                      - name: envoy.access_loggers.file
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
+                          path: /dev/stdout
+                          log_format:
+                            json_format:
+                              timestamp: '%START_TIME%'
+                              client_ip: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%'
+                              uri: '%REQ(:PATH)%'
+                              method: '%REQ(:METHOD)%'
+                              protocol: '%PROTOCOL%'
+                              response_code: '%RESPONSE_CODE%'
+                              bytes_received: '%BYTES_RECEIVED%'
+                              bytes_sent: '%BYTES_SENT%'
+                              duration: '%DURATION%'
+                              filter_chain_name: '%FILTER_CHAIN_NAME%'
+                              upstream_host: '%UPSTREAM_HOST%'
+                              upstream_cluster: '%UPSTREAM_CLUSTER%'
+                              upstream_local_address: '%UPSTREAM_LOCAL_ADDRESS%'
+                              grpc_status: '%GRPC_STATUS%'
+                              requested_server_name: '%REQUESTED_SERVER_NAME%'
+            - name: connect_agent_api
+              filter_chain_match:
+                application_protocols:
+                  - h2
+                server_names:
+                  - connect-agent.{{ .Values.connect.urlBase }}
+              transport_socket:
+                name: envoy.transport_sockets.tls
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                  require_client_certificate: true
+                  common_tls_context:
+                    alpn_protocols:
+                      - h2
+                    tls_certificate_sds_secret_configs:
+                      - name: spiffe://{{ .Values.connect.trustDomain }}/ns/{{ .Release.Namespace }}/sa/{{ include "cofide-connect.serviceAccountName" . }}
+                        sds_config:
+                          resource_api_version: V3
+                          api_config_source:
+                            api_type: GRPC
+                            grpc_services:
+                              - envoy_grpc:
+                                  cluster_name: spire_agent
+                    combined_validation_context:
+                      default_validation_context:
+                        match_typed_subject_alt_names:
+                          - san_type: URI
+                            matcher:
+                              safe_regex:
+                                regex: spiffe://[^/]*/ns/cofide/sa/cofide-agent
+                          - san_type: URI
+                            matcher:
+                              safe_regex:
+                                regex: spiffe://[^/]*/spire/server
+                      validation_context_sds_secret_config:
+                        name: ALL
+                        sds_config:
+                          resource_api_version: V3
+                          api_config_source:
+                            transport_api_version: V3
+                            api_type: GRPC
+                            grpc_services:
+                              - envoy_grpc:
+                                  cluster_name: spire_agent
+              filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    access_log:
+                      - name: envoy.access_loggers.file
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
+                          path: /dev/stdout
+                    stat_prefix: grpc_json
+                    codec_type: AUTO
+                    forward_client_cert_details: SANITIZE_SET
+                    set_current_client_cert_details:
+                      uri: true
+                    route_config:
+                      name: mtls_route
+                      virtual_hosts:
+                        - name: mtls_services
+                          domains:
+                            - '*'
+                          routes:
+                            - match:
+                                prefix: /proto.connect
+                                grpc: {}
+                              route:
+                                cluster: connect_service
+                    http_filters:
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+      clusters:
+        - name: connect_service
+          connect_timeout: 5.0s
+          type: STRICT_DNS
+          lb_policy: ROUND_ROBIN
+          http2_protocol_options: {}
+          load_assignment:
+            cluster_name: connect_service
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: 127.0.0.1
+                          port_value: 51106
+        - name: xds_service
+          connect_timeout: 5.0s
+          type: STRICT_DNS
+          lb_policy: ROUND_ROBIN
+          http2_protocol_options: {}
+          upstream_connection_options:
+            tcp_keepalive: {}
+          load_assignment:
+            cluster_name: xds_service
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: 127.0.0.1
+                          port_value: 18000
+        - name: spire_agent
+          connect_timeout: 5.0s
+          type: STATIC
+          http2_protocol_options: {}
+          load_assignment:
+            cluster_name: spire_agent
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        pipe:
+                          path: /spiffe-workload-api/spire-agent.sock
+        - name: jwks_cluster
+          connect_timeout: 30.0s
+          type: LOGICAL_DNS
+          dns_lookup_family: V4_ONLY
+          lb_policy: ROUND_ROBIN
+          load_assignment:
+            cluster_name: jwks_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: {{ (urlParse .Values.envoy.auth.issuer).host }}
+                          port_value: 443
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              sni: {{ (urlParse .Values.envoy.auth.issuer).host }}
+              common_tls_context:
+                tls_params:
+                  tls_minimum_protocol_version: TLSv1_3
+                  tls_maximum_protocol_version: TLSv1_3
+    admin:
+      access_log_path: /dev/stdout
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901
