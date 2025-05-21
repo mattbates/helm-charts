@@ -13,7 +13,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ .Values.xdsServer.service.type | default "ClusterIP" }}
+  type: {{ .Values.xdsServer.service.type |default .Values.xdsServer.service.type }}
   ports:
     - port: {{ .Values.xdsServer.service.port }}
       targetPort: {{ .Values.xdsServer.service.targetPort | default .Values.xdsServer.service.port }}
