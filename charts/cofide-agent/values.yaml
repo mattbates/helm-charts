@@ -25,6 +25,13 @@ agent:
     OIDC_ENDPOINT_ENABLED: true
     TRUST_DOMAIN: ""
 
+# This is for the Agent's xDS server
+xdsServer:
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 18001
+
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.

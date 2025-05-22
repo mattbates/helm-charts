@@ -1,0 +1,24 @@
+{{- if .Values.xdsServer.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cofide-agent.fullname" . }}-xds
+  labels:
+    {{- include "cofide-agent.labels" . | nindent 4 }}
+    {{- with .Values.xdsServer.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.xdsServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.xdsServer.service.type }}
+  ports:
+    - port: {{ .Values.xdsServer.service.port }}
+      targetPort: {{ .Values.xdsServer.service.targetPort | default .Values.xdsServer.service.port }}
+      protocol: {{ .Values.xdsServer.service.protocol | default "TCP" }}
+      name: {{ .Values.xdsServer.service.portName | default "grpc-xds" }}
+  selector:
+    {{- include "cofide-agent.selectorLabels" . | nindent 4 }}
+{{- end }}
