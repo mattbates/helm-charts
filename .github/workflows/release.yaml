@@ -3,19 +3,13 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
-  contents: read
+  contents: write
+  packages: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: octo-sts/action@main
-        id: octo-sts
-        with:
-          scope: cofide/helm-charts
-          identity: package
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
