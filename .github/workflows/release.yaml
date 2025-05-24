@@ -29,14 +29,21 @@ jobs:
       - name: Authenticate Helm to ECR
         run: |
           aws ecr get-login-password --region eu-west-1 | helm registry login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
-      - name: Package Helm chart
+      - name: Package Helm charts
         run: |
-          helm package charts/cofide-agent --destination packaged
-          helm package charts/cofide-connect --destination packaged
+          for chart in charts/*/; do
+            if [ -f "$chart/Chart.yaml" ]; then
+              echo "Packaging chart: $chart"
+              helm package "$chart" --destination dist/
+            fi
+          done
+      - name: Generate Helm repository index
+        run: |
+          helm repo index dist/ --url https://your-charts.pages.dev
       - name: Push Helm chart to ECR
         run: |
-          AGENT_CHART_FILE=$(ls packaged/cofide-agent*.tgz)
-          CONNECT_CHART_FILE=$(ls packaged/cofide-connect*.tgz)
+          AGENT_CHART_FILE=$(ls dist/cofide-agent*.tgz)
+          CONNECT_CHART_FILE=$(ls dist/cofide-connect*.tgz)
           helm push "$AGENT_CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
           helm push "$CONNECT_CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
 
