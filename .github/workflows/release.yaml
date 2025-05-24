@@ -21,7 +21,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run chart-releaser to Package and Release Helm Charts
+      - name: Run chart-releaser to package and release Helm charts
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: $\{\{ secrets.GITHUB_TOKEN }}
