@@ -3,4 +3,4 @@ subject: repo:cofide/helm-charts:ref:refs/heads/mb/add-cf-pages-publish
 
 permissions:
   contents: read
-  packags: write
+  packages: write
