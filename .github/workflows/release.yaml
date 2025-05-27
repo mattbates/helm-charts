@@ -3,12 +3,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
-  contents: read
-
-env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  contents: write
+  packages: write
 
 jobs:
   publish:
@@ -16,27 +12,30 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT_ID}}:role/connect-ecr-gh-actions-access
-          role-session-name: connect-ecr-gh-actions-access
-          aws-region: ${{ env.AWS_REGION }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0
         with:
           version: 'latest'
-      - name: Authenticate Helm to ECR
-        run: |
-          aws ecr get-login-password --region eu-west-1 | helm registry login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
-      - name: Package Helm chart
-        run: |
-          helm package charts/cofide-agent --destination packaged
-          helm package charts/cofide-connect --destination packaged
-      - name: Push Helm chart to ECR
-        run: |
-          AGENT_CHART_FILE=$(ls packaged/cofide-agent*.tgz)
-          CONNECT_CHART_FILE=$(ls packaged/cofide-connect*.tgz)
-          helm push "$AGENT_CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
-          helm push "$CONNECT_CHART_FILE" oci://${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/cofide/helm-charts
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run chart-releaser to package and release Helm charts
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          charts_dir: charts
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
