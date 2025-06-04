@@ -193,8 +193,6 @@ data:
                               requested_server_name: '%REQUESTED_SERVER_NAME%'
             - name: connect_agent_api
               filter_chain_match:
-                application_protocols:
-                  - h2
                 server_names:
                   - connect-agent.{{ .Values.connect.urlBase }}
               transport_socket:
@@ -225,6 +223,10 @@ data:
                             matcher:
                               safe_regex:
                                 regex: spiffe://[^/]*/spire/server
+                          - san_type: URI
+                            matcher:
+                              safe_regex:
+                                regex: spiffe://[^/]*/ns/cofide/sa/cofide-observer
                       validation_context_sds_secret_config:
                         name: ALL
                         sds_config:
@@ -258,7 +260,6 @@ data:
                           routes:
                             - match:
                                 prefix: /proto.connect
-                                grpc: {}
                               route:
                                 cluster: connect_service
                     http_filters:
