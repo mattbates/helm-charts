@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "spiffe-enable.fullname" . }}
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "spiffe-enable.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: https
+      port: {{ .Values.service.port }} 
+      # targetPort should match the containerPort where the webhook application is listening
+      targetPort: https-webhook # Refers to the named port 'https-webhook' in the Deployment
+      protocol: TCP
+  selector:
+    {{- include "spiffe-enable.selectorLabels" . | nindent 4 }}

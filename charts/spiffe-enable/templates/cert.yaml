@@ -1,0 +1,16 @@
+apiVersion: {{ include "cert-manager.apiVersion" . }}
+kind: Certificate
+metadata:
+  name: {{ .Values.certManager.certificateName }}
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "spiffe-enable.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.certManager.secretName }}
+  dnsNames:
+    {{- range .Values.certManager.dnsNames }}
+    - {{ tpl . $ }}
+    {{- end }}
+  issuerRef:
+    name: {{ .Values.certManager.issuerName }}
+    kind: {{ .Values.certManager.issuerKind }}

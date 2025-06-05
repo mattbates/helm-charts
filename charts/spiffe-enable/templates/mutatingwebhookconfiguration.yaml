@@ -1,0 +1,36 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ .Values.webhook.configName | default (include "spiffe-enable.fullname" .) }}
+  annotations:
+    # cert-manager.io/inject-ca-from: <namespace>/<certificate-name>
+    # This annotation tells cert-manager to inject the CA bundle from the specified Certificate
+    cert-manager.io/inject-ca-from: "{{ .Values.namespace | default .Release.Namespace }}/{{ .Values.certManager.certificateName }}"
+  labels:
+    {{- include "spiffe-enable.labels" . | nindent 4 }}
+webhooks:
+- name: {{ .Values.webhook.entryName }}
+  admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      namespace: {{ .Values.namespace | default .Release.Namespace }}
+      name: {{ include "spiffe-enable.fullname" . }} # Name of the Service defined in service.yaml
+      port: {{ .Values.service.port }} # Port number of the Service
+      path: "{{ .Values.webhook.path }}" # Path for the webhook endpoint (e.g., "/inject")
+    # caBundle will be automatically injected by cert-manager due to the annotation above
+  failurePolicy: {{ .Values.webhook.failurePolicy }}
+  rules:
+  - apiGroups:
+    - "" # Core API group
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pods
+  sideEffects: None # Indicates that the webhook has no side effects on other resources
+  namespaceSelector: # Restricts the namespaces this webhook applies to
+    matchLabels:
+      spiffe.cofide.io/enabled: "true"

@@ -1,0 +1,78 @@
+replicaCount: 1
+
+image:
+  registry: ghcr.io
+  repository: cofide/spiffe-enable
+  pullPolicy: Always
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template, e.g., <release-name>-spiffe-enable
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Container security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP # Type of the service for the webhook
+  port: 9443      # Port the service listens on (used by MutatingWebhookConfiguration)
+
+webhook:
+  appName: "spiffe-enable-webhook" # Used for app label and container name, matches original manifest
+  # Name for the MutatingWebhookConfiguration resource itself
+  configName: "spiffe-enable-webhook"
+  # Name for the entry in the webhooks list inside MutatingWebhookConfiguration
+  entryName: "spiffe-enable.cofide.io"
+  failurePolicy: Fail
+  # Port the application inside the container listens on for webhook requests
+  containerPort: 9443
+  # Port for liveness/readiness probes
+  healthProbePort: 8081
+  # Path for the webhook endpoint
+  path: "/inject"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+certManager:
+  # Name for the Issuer/ClusterIssuer resource
+  issuerName: "selfsigned"
+  # Kind of the issuer: Issuer or ClusterIssuer
+  issuerKind: "Issuer"
+  # Name for the Certificate resource
+  certificateName: "spiffe-enable-webhook"
+  # Name of the Kubernetes Secret where the TLS certificate will be stored
+  secretName: "spiffe-enable-webhook-tls"
+  # DNS names to include in the certificate.
+  # The `tpl` function will be used in the template to render these.
+  dnsNames:
+    # Default: <service-fullname>.<namespace>.svc
+    # e.g., myrelease-spiffe-enable.cofide.svc
+    - "{{ include \"spiffe-enable.fullname\" . }}.{{ .Values.namespace | default .Release.Namespace }}.svc"
+    # You can add more static or templated DNS names if needed
+    # - "spiffe-enable-webhook.{{ .Values.namespace | default .Release.Namespace }}.svc.cluster.local"
