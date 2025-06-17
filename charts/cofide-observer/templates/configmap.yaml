@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  CONNECT_URL: {{ required "Connect URL is required" .Values.observer.connectURL }}
+  CONNECT_TRUST_DOMAIN: {{ required "Connect Trust Domain is required" .Values.observer.connectTrustDomain }}
