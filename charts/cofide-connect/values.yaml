@@ -37,6 +37,7 @@ envoy:
   auth:
     issuer: ""
     tlsSecretName: ""
+  logLevel: "info"
   securityContext: {}
   resources: {}
 

@@ -74,6 +74,8 @@ spec:
             - ${POD_NAME}
             - --service-cluster
             - ${POD_NAMESPACE}
+            - -l
+            - {{ .Values.envoy.logLevel }}
           ports:
             - name: https
               containerPort: 8443
