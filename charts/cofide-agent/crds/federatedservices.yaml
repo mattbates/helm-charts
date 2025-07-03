@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -37,11 +38,29 @@ spec:
             type: object
           spec:
             properties:
-              clusterName:
-                type: string
               exportedTrustDomains:
                 items:
                   type: string
+                type: array
+              gateways:
+                items:
+                  properties:
+                    hostname:
+                      type: string
+                    ip:
+                      type: string
+                    port:
+                      format: int32
+                      maximum: 65535
+                      minimum: 1
+                      type: integer
+                    type:
+                      minLength: 1
+                      type: string
+                  required:
+                  - port
+                  - type
+                  type: object
                 type: array
               name:
                 type: string
@@ -50,8 +69,6 @@ spec:
               port:
                 format: int32
                 type: integer
-              trustDomain:
-                type: string
               workloadLabels:
                 additionalProperties:
                   type: string
@@ -130,9 +147,15 @@ spec:
                       type: string
                     port:
                       format: int32
+                      maximum: 65535
+                      minimum: 1
                       type: integer
                     type:
+                      minLength: 1
                       type: string
+                  required:
+                  - port
+                  - type
                   type: object
                 type: array
               observedGeneration:
