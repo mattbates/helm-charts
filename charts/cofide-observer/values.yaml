@@ -3,7 +3,9 @@
 # Declare variables to be passed into your templates.
 
 observer:
+  # URL of Cofide Connect API. Required.
   connectURL:
+  # SPIFFE trust domain of Cofide Connect API. Required.
   connectTrustDomain:
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/

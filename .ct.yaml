@@ -1,0 +1,4 @@
+# Path to linter configuration.
+lint-conf: .lintconf.yaml
+# The target branch to compare against.
+target-branch: main

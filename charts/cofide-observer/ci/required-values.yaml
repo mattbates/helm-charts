@@ -1,0 +1,5 @@
+observer:
+  # URL of Cofide Connect API. Required.
+  connectURL: api.connect.example.org:4321
+  # SPIFFE trust domain of Cofide Connect API. Required.
+  connectTrustDomain: connect.example.org

@@ -2,5 +2,8 @@ apiVersion: v2
 name: cofide-observer
 description: Helm chart to deploy Cofide Observer
 type: application
-version: 0.2.0
+version: 0.2.1
 appVersion: "v0.2.0"
+maintainers:
+  - name: Cofide
+    url: https://cofide.io
