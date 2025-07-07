@@ -163,6 +163,10 @@ data:
                               # No _user_ authentication is required as this is the agent registering
                               requires: {}
                             - match:
+                                prefix: /proto.connect.trust_zone_service.v1alpha1.TrustZoneService/RegisterTrustZoneServer
+                              # No user authentication is required as this is the trust zone server registering
+                              requires: {}
+                            - match:
                                 prefix: /proto.connect
                               requires:
                                 provider_name: ory-oauth
