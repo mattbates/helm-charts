@@ -11,5 +11,12 @@ rules:
       - "get"
       - "list"
       - "watch"
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["cofide-agent-state"]
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
       - "update"
       - "patch"
