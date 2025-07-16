@@ -1,0 +1,60 @@
+apiVersion: v1
+entries:
+  cofide-agent:
+  - apiVersion: v2
+    appVersion: v0.27.0
+    created: "2025-07-16T14:35:25.04516349Z"
+    description: Helm chart to deploy the Cofide Agent to a Kubernetes cluster
+    digest: a748908cb5f5c673bc315fd74903893ed08732607ef4d1af2e36948df6224734
+    maintainers:
+    - name: Cofide
+      url: https://cofide.io
+    name: cofide-agent
+    type: application
+    urls:
+    - https://github.com/mattbates/helm-charts/releases/download/cofide-agent-0.3.0/cofide-agent-0.3.0.tgz
+    version: 0.3.0
+  cofide-connect:
+  - apiVersion: v2
+    appVersion: v0.27.0
+    created: "2025-07-16T14:35:25.249735724Z"
+    description: A Helm chart to deploy the Cofide Connect server to a Kubernetes
+      cluster
+    digest: fac4da9403963c5a98d6b94751edb2819fbd77ce684ab77c9c471c6be0dfba88
+    maintainers:
+    - name: Cofide
+      url: https://cofide.io
+    name: cofide-connect
+    type: application
+    urls:
+    - https://github.com/mattbates/helm-charts/releases/download/cofide-connect-0.2.2/cofide-connect-0.2.2.tgz
+    version: 0.2.2
+  cofide-observer:
+  - apiVersion: v2
+    appVersion: v0.3.0
+    created: "2025-07-16T14:35:25.364493221Z"
+    description: Helm chart to deploy Cofide Observer
+    digest: 65d388d44f62265ae6685d73d3634e42b76ea50c993bd1ed649dc94bfbfb207f
+    maintainers:
+    - name: Cofide
+      url: https://cofide.io
+    name: cofide-observer
+    type: application
+    urls:
+    - https://github.com/mattbates/helm-charts/releases/download/cofide-observer-0.3.0/cofide-observer-0.3.0.tgz
+    version: 0.3.0
+  spiffe-enable:
+  - apiVersion: v2
+    appVersion: v0.2.2
+    created: "2025-07-16T14:35:25.502600321Z"
+    description: Helm chart for the spiffe-enable admission webhook for Kubernetes
+    digest: 57220ef3d14dbb63f8db0e722b5f6dbdbd976f6d21e7ac39b491addbb2695438
+    maintainers:
+    - name: Cofide
+      url: https://cofide.io
+    name: spiffe-enable
+    type: application
+    urls:
+    - https://github.com/mattbates/helm-charts/releases/download/spiffe-enable-0.1.2/spiffe-enable-0.1.2.tgz
+    version: 0.1.2
+generated: "2025-07-16T14:35:25.502607164Z"
