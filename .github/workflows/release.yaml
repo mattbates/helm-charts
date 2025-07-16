@@ -18,7 +18,7 @@ jobs:
       - name: Checkout forked Spire chart
         uses: actions/checkout@v4
         with:
-          repository: cofide/spiffe-helm-charts-hardened
+          repository: cofide/spire-helm-charts-hardened
           path: charts/spire
           ref: main
 
