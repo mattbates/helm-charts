@@ -39,6 +39,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug file and git status
+        run: |
+          echo "--- File tree in charts directory ---"
+          ls -R charts
+          echo "--- Git status ---"
+          git status
+
       - name: Run chart-releaser to package and release Helm charts
         uses: helm/chart-releaser-action@v1.7.0
         with:
