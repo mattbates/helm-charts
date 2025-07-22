@@ -18,9 +18,9 @@ jobs:
       - name: Checkout forked Spire chart
         run: |
           # Clone the repository into a temporary directory
-          git clone --depth 1 --branch main https://github.com/cofide/spire-helm-charts-hardened.git tmp_spire_repo
+          git clone --depth 1 --branch main https://github.com/cofide/spiffe-helm-charts-hardened tmp_spiffe_charts_repo
           # Move the specific SPIRE chart
-          mv tmp_spire_repo/charts/spire charts/spire
+          mv tmp_spiffe_charts_repo/charts/spire charts/spire
 
       - name: Configure Git
         run: |
