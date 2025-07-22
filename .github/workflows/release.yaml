@@ -39,11 +39,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Debug file and git status
-        run: |
-          echo "--- File tree in charts directory ---"
-          ls -R charts
-
       - name: Commit chart changes
         run: |
           git add charts/spire/
