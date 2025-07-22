@@ -48,7 +48,6 @@ jobs:
         run: |
           git add charts/spire/
           git commit -m "Add/update SPIRE chart" || exit 0
-          git push
 
       - name: Run chart-releaser to package and release Helm charts
         uses: helm/chart-releaser-action@v1.7.0
