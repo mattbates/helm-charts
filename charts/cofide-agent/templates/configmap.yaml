@@ -7,11 +7,15 @@ data:
   {{ $key }}: {{ $value | quote }}
 {{- end }}
 ---
-
-{{- $existingConfigMap := lookup "v1" "ConfigMap" .Release.Namespace "cofide-agent-state" }}
-{{- if not $existingConfigMap }}
+# This ConfigMap is always part of the release, so Helm can manage its lifecycle.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cofide-agent-state
+{{- $existingState := lookup "v1" "ConfigMap" .Release.Namespace "cofide-agent-state" }}
+data:
+{{- if and $existingState $existingState.data }}
+  {{- toYaml $existingState.data | nindent 2 }}
+{{- else }}
+  {}
 {{- end }}
