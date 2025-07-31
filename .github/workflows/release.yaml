@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout forked Spire chart
+      - name: Checkout the Cofide SPIRE chart repo
         run: |
           # Clone the repository into a temporary directory
           git clone --depth 1 --branch main https://github.com/cofide/spiffe-helm-charts-hardened tmp_spiffe_charts_repo
@@ -44,8 +44,9 @@ jobs:
 
       - name: Commit chart changes
         run: |
+          # Add the SPIRE chart to git and commit to the local branch
           git add charts/spire/
-          git commit -m "Add/update SPIRE chart" || exit 0
+          git commit -m "Add the Cofide SPIRE chart" || exit 0
 
       - name: Run chart-releaser to package and release Helm charts
         uses: helm/chart-releaser-action@v1.7.0
